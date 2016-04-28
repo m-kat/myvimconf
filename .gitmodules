@@ -1,3 +1,6 @@
+[submodule ".vim/bundle/ack.vim"]    
+    path = .vim/bundle/ack.vim
+    url = https://github.com/mileszs/ack.vim.git
 [submodule ".vim/bundle/DoxygenToolkit.vim"]
 	path = .vim/bundle/DoxygenToolkit.vim
 	url = https://github.com/vim-scripts/DoxygenToolkit.vim.git
@@ -15,7 +18,7 @@
 	url = https://github.com/mattn/calendar-vim.git
 [submodule ".vim/bundle/command-t"]
 	path = .vim/bundle/command-t
-	url = https://github.com/wincent/command-t.git\nhttps://github.com/tomtom/vimscriptuploader.rb.git\nhttps://github.com/google/vroom.git
+	url = https://github.com/wincent/command-t.git
 [submodule ".vim/bundle/conque-term"]
 	path = .vim/bundle/conque-term
 	url = https://github.com/rosenfeld/conque-term.git
@@ -39,7 +42,7 @@
 	url = https://github.com/adragomir/javacomplete.git
 [submodule ".vim/bundle/jedi-vim"]
 	path = .vim/bundle/jedi-vim
-	url = https://github.com/davidhalter/jedi-vim.git\nhttps://github.com/davidhalter/jedi.git
+	url = https://github.com/davidhalter/jedi-vim.git
 [submodule ".vim/bundle/L9"]
 	path = .vim/bundle/L9
 	url = https://github.com/vim-scripts/L9.git
@@ -171,4 +174,4 @@
 	url = https://github.com/vimwiki/vimwiki.git
 [submodule ".vim/bundle/YouCompleteMe"]
 	path = .vim/bundle/YouCompleteMe
-	url = https://github.com/Valloric/YouCompleteMe.git\nhttps://github.com/ross/requests-futures\nhttps://github.com/Valloric/ycmd
+	url = https://github.com/Valloric/YouCompleteMe.git
