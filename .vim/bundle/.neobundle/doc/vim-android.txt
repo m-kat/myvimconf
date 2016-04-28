@@ -1,0 +1,593 @@
+*vim-android.txt*   For Vim version 7.3 or NeoVim   Last change: 2016 March 26
+
+Author:         Horacio Sanson
+Licence:        Vim licence, see |license|
+Homepage:       https://github.com/hsanson/vim-android
+Version:        1.4.0
+
+==============================================================================
+Contents                                   *vim-android* *vim-android-contents*
+
+         1. Intro ........................... |vim-android-intro|
+              Supported Features              |vim-android-features|
+              Known Issues                    |vim-android-issues|
+         2. Requirements .................... |vim-android-requirements|
+         3. Installation .................... |vim-android-installation|
+         4. Usage ........................... |vim-android-usage|
+              Commands ...................... |vim-android-commands|
+              Key mappings .................. |vim-android-keys|
+              Omnicompletion ................ |vim-android-omnicomplete|
+              PMD Plugin .................... |vim-android-pmd|
+              FindBugs Plugin ............... |vim-android-findbugs|
+              CheckStyle Plugin ............. |vim-android-checkstyle|
+              Linter Support................. |vim-android-linter|
+              Status Line.................... |vim-android-statusline|
+                Airline Status Line.......... |vim-android-airline|
+                LightLine Status Line........ |vim-android-lightline|
+         5. Configuration ................... |vim-android-configuration|
+         6. Todo ............................ |vim-android-todo|
+         7. Credits ......................... |vim-android-credits|
+
+==============================================================================
+1. Intro                                                      *vim-android-intro*
+
+vim-android is a plugin that facilitates the development of Gradle and Android
+applications within vim. When editing a java or xml file this plugin tries
+to find gradle.build file in the current directory and if found it
+configures a set of variables and commands that allows easier development for
+Gradle projects. If the gradle.build file contains the android gradle plugin
+then Android specific commands are also configured.
+
+------------------------------------------------------------------------------
+SUPPORTED FEATURES                                         *vim-android-features*
+
+The following features are supported by vim-android:
+
+  - Auto-detection of Gradle and Android projects when opening a Java or
+    XML file. For this the plugin uses findfile function that searches from the
+    current buffer path backwards until it finds a build.gradle file for the
+    project.
+  - Custom gradle vim task that invokes gradle directly with any
+    arguments passed to the command.
+  - Custom errorformat that captures java errors, linter errors, test errors,
+    aapt errors, checkstyle, pmd, findbugs and displays them in the quickfix
+    window. This requires that gradle be invoked with the vim init file
+    loaded.
+  - Updates the CLASSPATH environment variable to include paths for your
+    current project, external libs, external lib-projects and the current
+    target Android SDK jars. This allows auto-completion of Java code using
+    other plugins such as javacomplete2.
+  - Updates the SRCPATH environment variable to include source paths for the
+    current project and dependencies if available. This allows debuggers like
+    vebugger to follow source code during step debugging.
+  - Adds useful commands to compile and install your application APK into
+    your emulator/devices.
+  - Adds useful commands to generate tags for the current project source and
+    the Android SDK sources.
+  - Improved XML omnicompletion for Android resource and manifest XML files.
+  - Takes advantage of NVIM async functions to perfom long running tasks in
+    the background (e.g. GradleSync)
+
+------------------------------------------------------------------------------
+Known Issues                                                *vim-android-issues*
+
+  - The first time an android java or xml file is openned we create a list of
+    dependencies for the project and a cache with all the packages found in the
+    gradle home folder. This process can be extremely slow depending on the
+    number of dependencies the project has and the number of packages cached in
+    your gradle home. When running in NVIM with async functions these tasks do
+    not block the interface but all Gradle and Android commands won't be
+    available until the tasks complete in the background.
+
+  - To get full support of AAPT errors in the quickfix window of vim it is
+    recommended that you use the android gradle plugin version 1.3.0 or newer.
+    Previous versions of the android gradle plugin fail to show correctly the
+    absolute path of the XML files that have errors making it difficult to jump
+    to the problem files directly within vim.
+
+        https://code.google.com/p/android/issues/detail?id=57513
+        https://code.google.com/p/android/issues/detail?id=174778
+
+  - The javacomplete plugin is nice but in some situations it hangs or spits
+    thousands of incomprensible error messages. For this reason I recommend
+    you use the new javacomplete2 plugin instead:
+
+      See: https://github.com/artur-shaik/vim-javacomplete2
+
+==============================================================================
+2. Requirements                                        *vim-android-requirements*
+
+The following requirements have to be met in order to be able to use vim-android:
+
+  - Vim 7.3 or a recent build of Neovim. This plugin may also work with previous
+    versions but I have only tested Vim 7.3 and Neovim.
+  - Android SDK installed and with the platform-tools directory set in your
+    PATH environment variable.
+    - Android gradle plugin 1.3.0 or newer recommended.
+    - Android build tools 22.0.1 or newer recommended.
+  - Gradle 2.2+ in your PATH.
+  - The exuberant-ctags package if you want to generate tags for the android
+    project, dependencies and the Android SDK.
+
+==============================================================================
+3. Installation                                        *vim-android-installation*
+
+It is recommended that you use a package manager like Pathogen or Vundle to
+install this plugin. In the case of Vundle all you have to do is add this
+line to your vimrc:
+>
+       Bundle 'hsanson/vim-android'
+<
+and then inside vim run the |:BundleInstall| command.
+
+==============================================================================
+4. Usage                                                      *vim-android-usage*
+
+Before using this plugin you must tell it where you have the android SDK
+installed. There are two ways to do this: you can set the ANDROID_HOME
+environment variable to the absolute path of the android SDK or you can set
+it to the global variable g:android_sdk_path in your vimrc file.
+
+When you open a Java or XML file this plugin looks for a build.gradle file
+starting from the location of the current open buffer upwards until your
+HOME directory. If it is found this plugin activates and enables several
+commands that faciliate working on Android projects and exports environment
+variables that can be used by other plugins for omnicomplete and debugging.
+
+Optionally you may also set |g:gradle_path| to tell the plugin where to look
+for the gradle binaries. Check the options documentation below for more
+details on these and other options.
+
+------------------------------------------------------------------------------
+COMMANDS                                                   *vim-android-commands*
+
+:GradleSync
+    Synchronizes the vim-android environment with that of the gradle.build
+    file. This is run automatically when opening a buffer with a xml or java
+    file inside a gradle or android project. You should execute this command
+    everytime you make changes to your build.gradle file.
+
+:Gradle <options>
+    Invokes gradle passing the <options> verbatim. Any gradle options
+    available via command line can be used using this command (e.g. :Gradle
+    build).
+
+:Android <options>
+    This is an alias to the Gradle command.
+
+:AndroidInstall <mode>                                   *:AndroidDebugInstall*
+    Build and installs the application in <mode> mode. In the case that you
+    have several emulators running and/or several devices connected then this
+    command will present you a list of emulators/devices so you can choose to
+    which one the APK should be installed to. If there are not apk files
+    build this command fails with an error. Current version of gradle can also
+    install the APK on all connected devices so invoking :Android installDebug
+    or :Android installRelease should have the same effect if you have a recent
+    enough version of the android gradle plugin.
+
+:AndroidUninstall                                           *:AndroidUninstall*
+    This command allows to uninstall the application. If you have several
+    emulators running and/or several devices connected, then this command will
+    prompt you with a list of emulators/devices so you can choose from which one
+    the app should be uninstalled. Current version of gradle can also uninstall
+    the APKs from all connected devices so invoking :Android uninstallAll should
+    have the same effect as long as you have a recent version of android gradle
+    plugin.
+
+:AndroidUpdateTags                                          *:AndroidUpdateTags*
+    This is a simple helper command that generates a tags file from the
+    android sdk sources, the library dependencies and the current android
+    project. The generated tags file is located in the |g:android_sdk_tags|
+    folder and is automatically set into the vim tags variable.
+
+    Generating the tags file for the Android SDK requires that you have the
+    exuberant-ctags command utility installed and available in your PATH.
+    Plain ctags may work too but some plugins (e.g. YouCompleteMe) do require
+    some flags available only in exuberant-ctags.
+
+    You should invoke this command every time you change library dependencies,
+    the android target API, and you project source files. You may create an
+    command to update the tags everytime a file is saved.
+
+:AndroidDevices                                               *:AndroidDevices*
+    Lists all android devices connected and all running emulators.
+
+:AndroidEmulator                                             *:AndroidEmulator*
+    Allows to start defined avd emulators within vim.
+
+------------------------------------------------------------------------------
+KEY MAPPINGS                                                  *vim-android-keys*
+
+By default the vim-android plugin has no mappings and all functionality is
+accessed using the commmands |vim-android-commands| but this does not impede
+you from creating your own mappings.
+
+For example you can map a function key (e.g. F5) to compile your project in
+debug mode using:
+
+>
+  nmap <F5> <ESC>:Gradle assembleDebug<CR>
+<
+
+this way anytime you press the <F5> key it will build and install your
+Android application.
+
+------------------------------------------------------------------------------
+ANDROID OMNI-COMPLETION                              *vim-android-omnicomplete*
+
+This plugin by itself does not provide omni-completion of Android classes
+and/or methods. Instead it sets the CLASSPATH envirnment variable with the
+paths of all jar and class files used in the project. This include projects
+own classes and dependencies.
+
+With the CLASSPATH set, plugins such as the javacomplete2 can be used to
+enable omnicompletion (https://github.com/artur-shaik/vim-javacomplete2).
+
+------------------------------------------------------------------------------
+PMD PLUGIN SUPPORT                                          *vim-android-pmd*
+
+This plugin automatically detects if the pmd gradle plugin is loaded,
+parses the xml reports it generates and populates the quickfix window with the
+errors and warnings reported by it.
+
+The pmd gradle plugin does not work by default with the android gradle plugin.
+To make it work with android applications you need to explicitly create a task
+of type *Pmd* in you build.gradle file:
+>
+    apply plugin: 'pmd'
+
+    task pmd(type: Pmd) {
+        ruleSets = ["java-basic", "java-braces", "java-strings",
+                    "java-android", "java-imports", /*"java-codesize",
+                    "java-design", */"java-unusedcode"]
+
+        source 'src'
+        include '**/*.java'
+        exclude '**/gen/**'
+        exclude '**/androidTest/**'
+
+        reports {
+            xml.enabled = true
+            html.enabled = true
+        }
+    }
+<
+After creating the task you can make it execute after running the check task
+by adding the following to your build.gradle file:
+>
+    check.finalizedBy 'pmd'
+<
+refer to the gradle pmd plugin documetnation for more options:
+
+  https://docs.gradle.org/current/userguide/pmd_plugin.html
+
+------------------------------------------------------------------------------
+FindBugs PLUGIN SUPPORT                                  *vim-android-findbugs*
+
+This plugin automatically detects if the findbugs gradle plugin is loaded,
+parses the xml reports it generates and populates the quickfix window with the
+errors and warnings reported by it.
+
+For projects that use the android gradle plugin, the findbugs plugin does not
+work by default. To make it work with android projects you need to explicitly
+create a task of type *FindBugs* in you build.gradle file:
+>
+    task findbugs(type: FindBugs) {
+      effort = "max"
+      reportLevel = "high"
+      ignoreFailures = false
+      excludeFilter = new File("${project.rootDir}/config/findbugs.xml")
+      classes = files("$project.buildDir/intermediates/classes/")
+      source 'src'
+      include '**/*.java'
+      classpath = files()
+      reports {
+        xml {
+          destination "${project.buildDir}/reports/findbugs/findbugs.xml"
+        }
+      }
+    }
+<
+You also need to add this findbugs.xml filter file into a config folder. If
+you want it in another place change the excludeFilter path in the above
+FindBugs task definition:
+>
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!--
+      ~ Copyright 2015 Vincent Brison.
+      ~
+      ~ Licensed under the Apache License, Version 2.0 (the "License");
+      ~ you may not use this file except in compliance with the License.
+      ~ You may obtain a copy of the License at
+      ~
+      ~    http://www.apache.org/licenses/LICENSE-2.0
+      ~
+      ~ Unless required by applicable law or agreed to in writing, software
+      ~ distributed under the License is distributed on an "AS IS" BASIS,
+      ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      ~ See the License for the specific language governing permissions and
+      ~ limitations under the License.
+      -->
+    <FindBugsFilter>
+        <!-- http://stackoverflow.com/questions/7568579/eclipsefindbugs-exclude-filter-files-doesnt-work -->
+        <Match>
+            <Class name="~.*\.R\$.*"/>
+        </Match>
+        <Match>
+            <Class name="~.*\.Manifest\$.*"/>
+        </Match>
+        <!-- All bugs in test classes, except for JUnit-specific bugs -->
+        <Match>
+            <Class name="~.*\.*Test" />
+            <Not>
+                <Bug code="IJU" />
+            </Not>
+        </Match>
+    </FindBugsFilter>
+<
+After creating the task you can make it execute after running the check task
+by adding the following to your build.gradle file:
+>
+    check.finalizedBy 'findbugs'
+<
+Refer to the gradle findbugs plugin documetnation for more options:
+
+  https://docs.gradle.org/current/userguide/findbugs_plugin.html
+
+Pro Tip: Set *g:netrw_browsex_viewer* variable to your favorite browser and
+then with the cursor in the findbugs details URL press gx to open the
+detailed explanation of the error in your favorite browser:
+>
+  let g:netrw_browsex_viewer = "firefox -new-tab"
+<
+See the :h gx for more details on this functionality.
+
+------------------------------------------------------------------------------
+CHECKSTYLE PLUGIN SUPPORT                              *vim-android-checkstyle*
+
+This plugin automatically detects if the checkstyle gradle plugin is loaded,
+parses the xml reports it generates and populates the quickfix window with the
+errors and warnings reported by it.
+
+The checkstyle gradle plugin does not work by default with the android gradle plugin.
+To make it work with android applications you need to explicitly create a task
+of type *Checkstyle* in you build.gradle file:
+
+>
+    task checkstyle(type: Checkstyle) {
+        configFile file("${project.rootDir}/config/checkstyle.xml")
+        source 'src'
+        include '**/*.java'
+        exclude '**/gen/**'
+        exclude '**/androidTest/**'
+        classpath = files()
+    }
+<
+
+After creating the task you can make it execute after running the check task
+by adding the following to your build.gradle file:
+>
+    check.finalizedBy 'checkstyle'
+<
+refer to the gradle checkstyle plugin documetnation for more options:
+
+  https://docs.gradle.org/current/userguide/checkstyle_plugin.html
+
+------------------------------------------------------------------------------
+ANDROID LINTER SUPPORT                                      *vim-android-linter*
+
+When gradle finishes building the project this plugin will try to find the
+lint-report.xml file, parse it and print to stderr the list of lint errors and
+warnings in a format that is easy to parse for vim error format. All that
+needs to be done is to execute the linter within vim to get the quickfix
+window populated with all linter errors and warnings:
+
+    :Android lint
+
+------------------------------------------------------------------------------
+STATUS LINE                                             *vim-android-statusline*
+
+This plugin provides a gradle#statusLine() method that returns an string
+indiciating the plugin status. The default status line looks like below:
+>
+    A  12 E 1 W
+<
+The first glyph can be either A or G to indicate if the file belongs to an
+Android project or a Gradle project respectively.
+
+In the quickfix window if there are compilation errors then the number of
+errors is shown followed by E and if there are warning then the number of
+warnings is shown followed by W.
+
+If your are running NeoVim the status will show *building...* instead in the
+status to indicate that some long background process is being executed (e.g.
+Gradle build or GradleSync).
+
+You can customize the glyphs shown in the status bar by setting the global
+variables below. This is specially useful if you have a powerline enabled
+font.
+
+                                                 *g:gradle_glyph_gradle*
+g:gradle_glyph_gradle~
+Default: "G"
+>
+        let g:gradle_glyph_gradle = 'U+e73a'
+<
+                                                 *g:gradle_glyph_android*
+g:gradle_glyph_android~
+Default: "A"
+>
+        let g:gradle_glyph_android = 'U+f17b'
+<
+                                                   *g:gradle_glyph_error*
+g:gradle_glyph_error~
+Default: "E"
+>
+        let g:android_airline_error_glyph = 'U+f06a'
+<
+                                                 *g:gradle_glyph_warning*
+g:gradle_glyph_warning~
+Default: "W"
+>
+        let g:gradle_glyph_warning = 'U+f071'
+<
+                                                 *g:gradle_glyph_building*
+g:gradle_glyph_building~
+Default: "building..."
+>
+        let g:gradle_glyph_building... = 'U+f253'
+<
+Note: To use the examples above you must have a powerline enabled font. You
+can use a program such as fontmatrix to browse the glyphs availabe in your
+font and find the HEX representation. Once you know the HEX representation of
+the glyph you can copy/paste it or input it by presing <Ctrl+v> followed by
+'u' and the HEX code in insert mode.
+
+------------------------------------------------------------------------------
+AIRLINE STATUS LINE                                      *vim-android-airline*
+
+To show the gradle/android status line in Airline you can add the following to
+your vim configuration to create a vim-gradle-status part:
+>
+   call airline#parts#define_function('vim-gradle-status', 'gradle#statusLine')
+<
+then you can add to any airline section you want:
+>
+   let g:airline_section_x= airline#section#create_right(['tagbar', 'filetype', 'vim-gradle-status'])
+<
+
+refer to airline documentation for details on how parts and sections are
+defined and used.
+
+------------------------------------------------------------------------------
+LIGHTLINE STATUS LINE                                    *vim-android-lightline*
+
+To show the gradle/android status line in Lightline you can add the following
+to your vim configuration:
+
+let g:lightline = {
+  \ 'colorcheme': 'PaperColor',
+  \ 'active': {
+  \    'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'readonly', 'filename', 'modified' ] ],
+  \    'right': [ ['lineinfo'], ['percent'], ['gradle'] ]
+  \ },
+  \ 'component': {
+  \    'gradle': '%{exists("*gradle#statusLine")?gradle#statusLine():""}'
+  \    },
+  \ 'component_visible_condition': {
+  \    'gradle': '(exists("*gradle#statusLine") && ""!=gradle#statusLine())'
+  \    }
+  \ }
+
+make sure you read the Lightline documentation for details on how this
+configuration works and adapt to your own usage.
+
+==============================================================================
+5. Configuration                                     *vim-android-configuration*
+
+                                                        *g:android_sdk_path*
+g:android_sdk_path~
+Default: $ANDROID_HOME
+
+This option must specify the location of your Android SDK installation.
+
+Example:
+>
+        let g:android_sdk_path = '/opt/adroid-sdk'
+<
+                                                               *g:gradle_path*
+g:gradle_path~
+Default: Gradle Wrapper
+
+By default this plugin tries to use gradle wrapper script (e.g. gradlew) to
+build the project. If the gradle wrapper is not found then it tries to use the
+$GRADLE_HOME environment variable to find a gradle binary, and if that fails
+then it uses the vim executable() method to try to find a gradle executable in
+the system $PATH.
+
+To force the plugin to use a specific gradle binary you can add the
+g:gradle_path variable in your vimrc or init.vim configuration. This variable
+must be set to the absolute path where gradle is installed.
+
+Example:
+>
+    let g:gradle_path=/path/to/gradle/home
+<
+                                                             *g:gradle_daemon*
+g:gradle_daemon~
+Default: 0
+
+If set to a number larger than zero, then gradle will be invoked in daemon mode.
+This can greatly improve the speed of building projects by loading gradle as a
+daemon and using it for subsequent builds.
+
+Example:
+>
+    let g:gradle_daemon=1
+<
+
+                                                            *g:android_adb_tool*
+g:android_adb_tool~
+Default: ${g:android_sdk_path}/tools/adb
+
+This plugin relies heavily on the Android ADB tool to query devices/emulators
+and to install the APK files. By default this tool is found inside the
+Android SDK so you do not need to set this variable but if for some reason in
+you installation the ADB tool is located in a different path you can
+explicitly tell the plugin where to find it using this variable.
+
+Example:
+>
+        let g:android_adb_tool=/path/to/tool/adb
+<
+
+                                                            *g:android_sdk_tags*
+g:android_sdk_tags~
+Default: $(PWD)/.tags
+
+This variable is the path were the tags file generated by the
+|:AndroidUpdateTags| command. If you prefer the tags file to be located on
+another place you can set this variable in your vimrc file to that location.
+
+Example:
+>
+        let g:android_sdk_tags=/path/to/tags/project.tags
+<
+                                                        *g:gradle_quickfix_show*
+g:gradle_quickfix_show~
+Default: 0
+
+Setting this variable to 1 causes the quickfix window to automatically open
+when there are errors after a gradle build.
+
+Example:
+>
+        let g:gradle_quickfix_show=1
+<
+==============================================================================
+9. Todo                                                       *vim-android-todo*
+
+  - Project creation commands.
+
+==============================================================================
+10. Credits                                                *vim-android-credits*
+
+Contributors:
+
+ - Donnie West (https://github.com/DonnieWest)
+
+Ideas stolen from:
+
+ - https://github.com/bpowell/vim-android
+ - https://github.com/mgarriott/vim-android
+ - http://flukus.github.io/2015/07/03/2015_07_03-Vim-errorformat-Demystified/
+
+Recommended :
+
+ - https://github.com/powerline/fonts
+ - https://github.com/bling/vim-airline
+ - https://github.com/artur-shaik/vim-javacomplete2
+ - https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts
+
+==============================================================================
+ vim: tw=78 ts=8 sw=4 sts=4 et ft=help
