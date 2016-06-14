@@ -117,6 +117,18 @@ function! g:UltiSnips_Complete()
     return ""
 endfunction
 
+
+set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
+" Always show statusline
+"
+ set laststatus=2
+ set term=xterm-256color
+ set termencoding=utf-8
+ let g:Powerline_symbols = 'unicode'
+"" let g:Powerline_symbols = 'fancy'
+""
+""
+"
 au BufEnter * exec "inoremap <silent> " . g:UltiSnipsExpandTrigger . " <C-R>=g:UltiSnips_Complete()<cr>"
 let g:UltiSnipsJumpForwardTrigger="<tab>"
 let g:UltiSnipsListSnippets="<c-e>"

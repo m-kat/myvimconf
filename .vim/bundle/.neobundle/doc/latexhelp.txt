@@ -1384,13 +1384,13 @@ follows. It is typed as ordinary LaTeX input.  Commands that make no sense in
 a letter, like |\chapter|, do not work. The letter closes with a |\closing|
 command.
 
-After the closing, you can have additional material. The |\cc1| command produces
+After the closing, you can have additional material. The |\cc| command produces
 the usual "cc: ...". There's also a similar |\encl| command for a list of
 enclosures. With both these commands, use|\\| to separate the items.
 
 These commands are used with the letter class:
 |\address|	Your return address.
-|\cc1|		Cc list.  closing Saying goodbye.
+|\cc|		Cc list.  closing Saying goodbye.
 |\encl|		List of enclosed material.
 |\location|	Your organisation's address.
 |\makelabels|	Making address labels.
@@ -1412,7 +1412,7 @@ These commands are used with the letter class:
 		implementation). If you give an |\address| declaration, then
 		the letter will be formatted as a personal letter.
 
-\cc1{Kate Schechter\\Rob McKenna}		*\cc1*
+\cc{Kate Schechter\\Rob McKenna}		*\cc*
 		Generate a list of other persons the letter was sent to. Each
 		name is printed on a separate line.
 
