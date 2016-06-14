@@ -12,7 +12,6 @@ conque-term
 dbext.vim
 errormarker.vim
 forms
-gmail.vim
 gundo.vim
 ide
 javacomplete
@@ -21,7 +20,7 @@ neobundle.vim
 neocomplete.vim
 nerdtree
 pep8
-project.vim
+powerline
 prolog.vim
 pydoc.vim
 pyflakes-pathogen
