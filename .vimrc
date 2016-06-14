@@ -192,8 +192,8 @@ if has("autocmd")
 
 
   " For all text files set 'textwidth' to 78 characters.
-  autocmd FileType text setlocal textwidth=78
-  autocmd FileType tex  setlocal textwidth=78
+  autocmd FileType text setlocal textwidth=128
+  autocmd FileType tex  setlocal textwidth=128
   autocmd FileType cpp  setlocal textwidth=128
   autocmd FileType c    setlocal textwidth=128
   autocmd FileType python setlocal textwidth=79
