@@ -178,3 +178,9 @@
 [submodule ".vim/bundle/powerline"]
 	path = .vim/bundle/powerline
 	url = https://github.com/powerline/powerline
+[submodule ".vim/bundle/textile"]
+	path = .vim/bundle/textile
+	url = https://github.com/timcharper/textile.vim.git
+[submodule ".vim/bundle/textile.vim"]
+	path = .vim/bundle/textile.vim
+	url = /home/marcin/.vim/bundle/textile.vim
