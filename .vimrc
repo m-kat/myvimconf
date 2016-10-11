@@ -238,7 +238,7 @@ colorscheme elflord
 "inoremap <c-p> <ESC>/%\u.\{-1,}%<cr>c/%/e<cr>
 "autocmd! BufNewFile * call LoadTemplate()
 
-autocmd FileType c,cpp,java,php,python,aws.json autocmd BufWritePre <buffer> :%s/\s\+$//e
+autocmd FileType c,cpp,java,php,python,aws.json,json autocmd BufWritePre <buffer> :%s/\s\+$//e
 "simple helper functions
 "
 func! Mconv16()
