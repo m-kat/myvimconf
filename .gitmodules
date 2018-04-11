@@ -163,6 +163,9 @@
 [submodule ".vim/bundle/vim-task"]
 	path = .vim/bundle/vim-task
 	url = https://github.com/samsonw/vim-task.git
+[submodule ".vim/bundle/vim-vebugger"] 
+	path = .vim/bundle/vim-vebugger
+	url = https://github.com/idanarye/vim-vebugger.git'
 [submodule ".vim/bundle/vim-taskwarrior"]
 	path = .vim/bundle/vim-taskwarrior
 	url = https://github.com/farseer90718/vim-taskwarrior.git
