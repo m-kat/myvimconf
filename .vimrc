@@ -33,7 +33,11 @@ set    shiftwidth=4
 set    expandtab
 set    nowrap
 
-
+"improving jedi error due to wrong python path
+"
+py3 import sys 
+py3 sys.path.append("/home/katulmar/anaconda3/lib/python3.6/site-packages/")
+py3 import jedi
 set rtp+=~/.vim/bundle/vundle/
 
 " My Bundles here:
@@ -82,7 +86,6 @@ NeoBundle 'syntastic'
 NeoBundle 't9md/vim-chef'
 NeoBundle 'terryma/vim-multiple-cursors'
 NeoBundle 'thinca/vim-template'
-NeoBundle 'timcharper/textile.vim'
 NeoBundle 'tpope/vim-fugitive'
 NeoBundle 'tpope/vim-rails.git'
 NeoBundle 'vim-latex/vim-latex'
@@ -97,7 +100,9 @@ NeoBundle 'vim-scripts/vcscommand.vim'
 NeoBundle 'vim-scripts/vimcommander'
 NeoBundle 'vimwiki/vimwiki'
 NeoBundle 'wincent/command-t.git'
+NeoBundle 'rust-lang/rust.vim'
 NeoBundleFetch 'Shougo/neobundle.vim'
+NeoBundle 'idanarye/vim-vebugger'
 " NeoBundleLazy 'vim-scripts/project.vim'
 " ...
 call neobundle#end()
@@ -126,7 +131,9 @@ set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
  set term=xterm-256color
  set termencoding=utf-8
  let g:Powerline_symbols = 'unicode'
-"" let g:Powerline_symbols = 'fancy'
+
+ let g:ycm_rust_src_path = '/usr/src/rustc-1.21.0/src'
+ "" let g:Powerline_symbols = 'fancy'
 ""
 ""
 "
@@ -146,7 +153,6 @@ autocmd FileType php set omnifunc=phpcomplete#CompletePHP
 " Lazy initialized plugins
 "
 autocmd FileType c,cpp,cmake NeoBundleSource project.vim 
-au FileType python set omnifunc=pythoncomplete#Complete
 
 "au! BufNewFile,BufRead *.template set ft=json.aws
 "===========================
@@ -348,7 +354,6 @@ let g:neocomplete#enable_auto_select = 1
 autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
 autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
 autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
 autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
 
 set encoding=utf-8

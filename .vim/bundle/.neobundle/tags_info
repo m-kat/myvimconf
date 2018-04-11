@@ -25,6 +25,7 @@ prolog.vim
 pydoc.vim
 pyflakes-pathogen
 pytest.vim
+rust.vim
 self
 sparkup
 syntastic
@@ -53,6 +54,7 @@ vim-statline
 vim-task
 vim-taskwarrior
 vim-template
+vim-vebugger
 vimcommander
 vimomni.vim
 vimproc.vim

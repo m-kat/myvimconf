@@ -24,6 +24,7 @@ Contents                                   *vim-android* *vim-android-contents*
               Status Line.................... |vim-android-statusline|
                 Airline Status Line.......... |vim-android-airline|
                 LightLine Status Line........ |vim-android-lightline|
+              Troubleshooting ............... |vim-android-troubleshooting|
          5. Configuration ................... |vim-android-configuration|
          6. Todo ............................ |vim-android-todo|
          7. Credits ......................... |vim-android-credits|
@@ -71,7 +72,7 @@ The following features are supported by vim-android:
 ------------------------------------------------------------------------------
 Known Issues                                                *vim-android-issues*
 
-  - The first time an android java or xml file is openned we create a list of
+  - The first time an android java or xml file is opened we create a list of
     dependencies for the project and a cache with all the packages found in the
     gradle home folder. This process can be extremely slow depending on the
     number of dependencies the project has and the number of packages cached in
@@ -89,7 +90,7 @@ Known Issues                                                *vim-android-issues*
         https://code.google.com/p/android/issues/detail?id=174778
 
   - The javacomplete plugin is nice but in some situations it hangs or spits
-    thousands of incomprensible error messages. For this reason I recommend
+    thousands of incomprehensible error messages. For this reason I recommend
     you use the new javacomplete2 plugin instead:
 
       See: https://github.com/artur-shaik/vim-javacomplete2
@@ -145,7 +146,7 @@ COMMANDS                                                   *vim-android-commands
     Synchronizes the vim-android environment with that of the gradle.build
     file. This is run automatically when opening a buffer with a xml or java
     file inside a gradle or android project. You should execute this command
-    everytime you make changes to your build.gradle file.
+    every time you make changes to your build.gradle file.
 
 :Gradle <options>
     Invokes gradle passing the <options> verbatim. Any gradle options
@@ -187,7 +188,7 @@ COMMANDS                                                   *vim-android-commands
 
     You should invoke this command every time you change library dependencies,
     the android target API, and you project source files. You may create an
-    command to update the tags everytime a file is saved.
+    command to update the tags every time a file is saved.
 
 :AndroidDevices                                               *:AndroidDevices*
     Lists all android devices connected and all running emulators.
@@ -199,7 +200,7 @@ COMMANDS                                                   *vim-android-commands
 KEY MAPPINGS                                                  *vim-android-keys*
 
 By default the vim-android plugin has no mappings and all functionality is
-accessed using the commmands |vim-android-commands| but this does not impede
+accessed using the commands |vim-android-commands| but this does not impede
 you from creating your own mappings.
 
 For example you can map a function key (e.g. F5) to compile your project in
@@ -211,6 +212,16 @@ debug mode using:
 
 this way anytime you press the <F5> key it will build and install your
 Android application.
+
+Every time you modify the build.gradle file by adding or removing dependencies
+it is a good idea to run the GradleSync command so the dependencies get loaded
+into vim-android. If you are using NeoVim and have async (g:gradle_async)
+enabled you may prefer to set an autocommand so this happens automatically.
+For this simply add the following to your vim configuration:
+
+>
+  au BufWrite build.gradle call gradle#sync()
+<
 
 ------------------------------------------------------------------------------
 ANDROID OMNI-COMPLETION                              *vim-android-omnicomplete*
@@ -382,7 +393,7 @@ warnings in a format that is easy to parse for vim error format. All that
 needs to be done is to execute the linter within vim to get the quickfix
 window populated with all linter errors and warnings:
 
-    :Android lint
+    :Gradle lint
 
 ------------------------------------------------------------------------------
 STATUS LINE                                             *vim-android-statusline*
@@ -482,6 +493,19 @@ let g:lightline = {
 make sure you read the Lightline documentation for details on how this
 configuration works and adapt to your own usage.
 
+------------------------------------------------------------------------------
+TROUBLESHOOTING                                    *vim-android-troubleshooting*
+
+Using neovim *health* feature you can check your environment setup running the
+CheckHealth command:
+>
+        :CheckHealth gradle
+<
+If you are not running neovim you can run the check function manually inside
+vim to verify your setup:
+>
+        :call health#gradle#check()
+<
 ==============================================================================
 5. Configuration                                     *vim-android-configuration*
 
@@ -495,35 +519,50 @@ Example:
 >
         let g:android_sdk_path = '/opt/adroid-sdk'
 <
-                                                               *g:gradle_path*
-g:gradle_path~
+                                                               *g:gradle_bin*
+g:gradle_bin~
 Default: Gradle Wrapper
 
 By default this plugin tries to use gradle wrapper script (e.g. gradlew) to
-build the project. If the gradle wrapper is not found then it tries to use the
-$GRADLE_HOME environment variable to find a gradle binary, and if that fails
-then it uses the vim executable() method to try to find a gradle executable in
-the system $PATH.
-
-To force the plugin to use a specific gradle binary you can add the
-g:gradle_path variable in your vimrc or init.vim configuration. This variable
-must be set to the absolute path where gradle is installed.
+build the project unless this variable is set. If set then the plugin uses this
+gradle binary to build all project. If this variable is not set and the
+project does not have a gradle wrapper script, then the binary is searched
+inside the GRADLE_HOME and PATH environment variables. See |g:gradle_path| for
+a way to customize this behaviour.
 
 Example:
 >
-    let g:gradle_path=/path/to/gradle/home
+    let g:gradle_bin=/opt/gradle/bin/gradle
 <
+                                                               *g:gradle_path*
+g:gradle_path~
+Default: GRADLE_HOME
+
+When the project has no gradle wrapper script and |g:gradle_bin| is not
+defined, then this project tries to search for the gradle binary inside
+GRADLE_HOME and PATH environment variables. If your gradle installation
+is in a non-standard location you can change the search path by setting
+this g:gradle_path variable:
+
+Example:
+>
+    let g:gradle_path=/opt/gradle
+<
+The above will cause the plugin to search for the gradle binary in the
+/bin directory within /opt/gradle folder.
+
                                                              *g:gradle_daemon*
 g:gradle_daemon~
-Default: 0
+Default: 1
 
-If set to a number larger than zero, then gradle will be invoked in daemon mode.
-This can greatly improve the speed of building projects by loading gradle as a
-daemon and using it for subsequent builds.
+If this variable is 1 then gradle will be executed with the daemon option on.
+This greatly improves the speed of builds and is recommended to let it
+enabled. If for some reason you prefer to not run gradle in daemon mode then
+set this variable to 0.
 
 Example:
 >
-    let g:gradle_daemon=1
+    let g:gradle_daemon=0
 <
 
                                                             *g:android_adb_tool*
@@ -555,14 +594,42 @@ Example:
 <
                                                         *g:gradle_quickfix_show*
 g:gradle_quickfix_show~
-Default: 0
+Default: 1
 
-Setting this variable to 1 causes the quickfix window to automatically open
-when there are errors after a gradle build.
+By default this plugin opens the quickfix window if there are errors after
+running a build. If you do not like this behaviour it is possible to disable
+it by setting this variable to 0.
 
 Example:
 >
-        let g:gradle_quickfix_show=1
+        let g:gradle_quickfix_show=0
+<
+                                                              *g:gradle_async*
+g:gradle_async~
+Default: 1
+
+If you are running NeoVim then this plugin will execute gradle tasks in the
+background using NeoVim job functions. If for some reason you need to disable
+this functionality you can do so by setting this variable to zero.
+
+Example:
+>
+        let g:gradle_quickfix_show=0
+<
+                                                        *g:gradle_set_classpath*
+g:gradle_set_classpath~
+Default: 1
+
+This plugin will automatically set the CLASSPATH and SRCPATH environment
+variables after gradle sync task completes. But there are other plugins (e.g.
+javacomplete2) that also set these environment variables. To avoid conflict
+you can disable this feature by setting this configuration variable to 0. In
+this case this plugin will not touch the CLASSPATH and SRCPATH environment
+variables.
+
+Example:
+>
+        let g:gradle_set_classpath=0
 <
 ==============================================================================
 9. Todo                                                       *vim-android-todo*
