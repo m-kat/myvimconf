@@ -33,11 +33,6 @@ set    shiftwidth=4
 set    expandtab
 set    nowrap
 
-"improving jedi error due to wrong python path
-"
-py3 import sys 
-py3 sys.path.append("/home/katulmar/anaconda3/lib/python3.6/site-packages/")
-py3 import jedi
 set rtp+=~/.vim/bundle/vundle/
 
 " My Bundles here:
