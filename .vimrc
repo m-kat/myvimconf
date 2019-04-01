@@ -13,7 +13,7 @@ endif
 
 " allow backspacing over everything in insert mode
 set backspace=indent,eol,start
-" let &errorformat="%f:%l:%c: %t%*[^:]:%m,%f:%l: %t%*[^:]:%m," . &errorformat 
+" let &errorformat="%f:%l:%c: %t%*[^:]:%m,%f:%l: %t%*[^:]:%m," . &errorformat
 if has("vms")
   set nobackup		" do not keep a backup file, use versions instead
 else
@@ -26,13 +26,17 @@ set    showcmd		" display incomplete commands
 set    incsearch		" do incremental searching
 syntax enable
 set    number
-set    relativenumber 
+set    relativenumber
 set    ruler
 set    tabstop=4
 set    shiftwidth=4
 set    expandtab
 set    nowrap
 
+"improving jedi error due to wrong python path
+"
+py3 import sys
+py3 import jedi
 set rtp+=~/.vim/bundle/vundle/
 
 " My Bundles here:
@@ -103,6 +107,12 @@ NeoBundle 'idanarye/vim-vebugger'
 call neobundle#end()
 NeoBundleCheck
 
+if exists('+colorcolumn')
+  set colorcolumn=100
+else
+  au BufWinEnter * let w:m2=matchadd('ErrorMsg', '\%>100v.\+', -1)
+endif
+
 function! g:UltiSnips_Complete()
     call UltiSnips#ExpandSnippet()
     if g:ulti_expand_res == 0
@@ -118,6 +128,8 @@ function! g:UltiSnips_Complete()
     return ""
 endfunction
 
+" ctags
+set tags=./tags;/,tags;/
 
 set rtp+=~/.vim/bundle/powerline/powerline/bindings/vim
 " Always show statusline
@@ -147,7 +159,7 @@ autocmd FileType php set omnifunc=phpcomplete#CompletePHP
 
 " Lazy initialized plugins
 "
-autocmd FileType c,cpp,cmake NeoBundleSource project.vim 
+autocmd FileType c,cpp,cmake NeoBundleSource project.vim
 
 "au! BufNewFile,BufRead *.template set ft=json.aws
 "===========================
@@ -212,8 +224,8 @@ else
   set autoindent		" always set autoindenting on
 endif " has("autocmd")
 
-set shellslash 
-set grepprg=grep\ -nH\ $* 
+set shellslash
+set grepprg=grep\ -nH\ $*
 
 " Convenient command to see the difference between the current buffer and the
 " file it was loaded from, thus the changes you made.
@@ -239,7 +251,11 @@ colorscheme elflord
 "inoremap <c-p> <ESC>/%\u.\{-1,}%<cr>c/%/e<cr>
 "autocmd! BufNewFile * call LoadTemplate()
 
-autocmd FileType c,cpp,java,php,python,aws.json,json autocmd BufWritePre <buffer> :%s/\s\+$//e
+
+autocmd FileType c,cpp,java,php,python,aws.json,json,make,doxygen,markdown autocmd BufWritePre <buffer> :%s/\s\+$//g
+set listchars=eol:$,tab:>-,trail:~,extends:>,precedes:<
+set list
+
 "simple helper functions
 "
 func! Mconv16()
@@ -248,13 +264,13 @@ func! Mconv16()
 endfunc
 
 func! Mconv10()
-    let @r=substitute( toupper( expand("<cword>") ), "0X","","") 
+    let @r=substitute( toupper( expand("<cword>") ), "0X","","")
     let @r=substitute( system("echo \"obase=10;ibase=16;" . @r . "\"| bc -l"), "\n","", "" )
     echom @r
 endfunc
 
 func! Mconv2x()
-    let @r=substitute( toupper( expand("<cword>") ), "0X","","") 
+    let @r=substitute( toupper( expand("<cword>") ), "0X","","")
     let @r=substitute( system("echo \"obase=2;ibase=16;" . @r . "\"| bc -l"), "\n","", "" )
     echom @r
 endfunc
@@ -265,7 +281,7 @@ func! Mconv2d()
 endfunc
 
 func! Mconvx2()
-    let @r=substitute( toupper( expand("<cword>") ), "0X","","") 
+    let @r=substitute( toupper( expand("<cword>") ), "0X","","")
     let @r=substitute( system("echo \"obase=16;ibase=2;" . @r . "\"| bc -l"), "\n","", "" )
     echom @r
 endfunc
@@ -296,10 +312,10 @@ nnoremap <LocalLeader><c-x><c-b> :call Mconvx2()<CR>
 " kolorowanie zaznaczonego tekstu
 func! Mcolor(color)
     let t=getpos("'<")
-    let y=getpos("'>")    
+    let y=getpos("'>")
     let line=getline( t[1] )
     let pat=strpart( line, t[2]-1, y[2]-t[2]+1)
-    let c=matchadd( a:color, ".*" . pat . ".*" )    
+    let c=matchadd( a:color, ".*" . pat . ".*" )
 endfunc
 
 highlight Mxr cterm=bold ctermfg=1       gui=bold guifg=Red
